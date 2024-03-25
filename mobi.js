@@ -1029,7 +1029,8 @@ class KF8 {
         this.dir = exth.pageProgressionDirection
         this.rendition = {
             layout: exth.fixedLayout === 'true' ? 'pre-paginated' : 'reflowable',
-            viewport: Object.fromEntries(exth.originalResolution
+            // https://groups.google.com/g/leanpub/c/rsAUciLjW0M?pli=1
+            viewport: Object.fromEntries((exth.originalResolution || '1149 x 1881')
                 ?.split('x')?.slice(0, 2)
                 ?.map((x, i) => [i ? 'height' : 'width', x]) ?? []),
         }
@@ -1153,6 +1154,10 @@ class KF8 {
 
         // by default, type is XHTML; change to HTML if it's not valid XHTML
         let doc = this.parser.parseFromString(replaced, this.#type)
+        // fix iframe relative image issue
+        let style = document.createElement('style')
+        style.textContent = 'img { position: unset !important; height: 100% !important; width: 100% !important; object-fit: contain; }'
+        doc.head.append(style)
         if (doc.querySelector('parsererror')) {
             this.#type = MIME.HTML
             doc = this.parser.parseFromString(replaced, this.#type)
